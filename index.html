@@ -27,6 +27,7 @@
             padding: 40px;
         }
 
+
         h1 {
             text-align: center;
             color: #1a237e;
@@ -44,6 +45,26 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 900;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            padding: 10px 20px;
+            background: #e8eaf6;
+            color: #1a237e;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9em;
+            border: 2px solid #c5cae9;
+            transition: all 0.3s ease;
+        }
+        .back-button:hover {
+            background: #c5cae9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         /* Header logo image */
@@ -79,6 +100,15 @@
             font-weight: 700;
             color: #333;
             font-size: 0.95em;
+        }
+
+        .promo-subtitle {
+            text-align: center;
+            color: #dc2626; /* Rouge */
+            font-weight: bold;
+            font-size: 1.1em; /* Taille réduite pour tenir sur une ligne */
+            font-size: 1.1em; /* Taille réduite pour tenir sur une ligne */
+            margin-bottom: 10px;
         }
 
         /* Overlay pour bloquer l'accès sur petits écrans */
@@ -565,6 +595,11 @@
             .calculate-container {
                 flex-direction: column;
             }
+
+            .back-button {
+                top: 20px;
+                right: 20px;
+            }
         }
     </style>
 </head>
@@ -577,10 +612,12 @@
         </div>
     </div>
     <div class="container">
+        <a href="https://simulateur-devis-allo-bot.vercel.app/" class="back-button">← Retour</a>
         <h1>
             <a href="#" aria-label="ALLO-BOT logo"><img src="https://i.ibb.co/NdQ86r88/ia.png" alt="ALLO-BOT" class="header-logo"></a>
-            SIMULATEUR DE DEVIS ALLO-BOT
+            SIMULATEUR DE DEVIS ALLO-BOT : PLAN PROMAX
         </h1>
+        <p class="promo-subtitle">Des tarifs de communications autour de 02 (deux) FCFA par minute et avec une capacité native de concurrence illimitée d'appels simultanés.</p>
         <p class="subtitle">Agent Vocal IA - Analyse Complète des Coûts Mensuels</p>
 
         <!-- Concepts Clés (Neurons & Tokens) -->
@@ -921,14 +958,14 @@
         <div class="calculate-container">
             <button class="btn-calculate" onclick="calculateCosts()">🔍 Calculer les Coûts</button>
             <div class="monthly-fee">
-                + Redevance mensuelle au service ALLO-BOT = 10.000 FCFA
+                + Redevance mensuelle au service ALLO-BOT = 15.000 FCFA
             </div>
         </div>
 
         <!-- Résultats -->
         <div class="results" id="results">
             <div class="result-card">
-                <h3 class="result-title">📊 Résumé Mensuel</h3>
+                <h3 class="result-title">📊 Résumé Mensuel Estimé</h3>
                 <div class="cost-breakdown" id="costBreakdown"></div>
                 <div class="total-cost" id="totalCost"></div>
             </div>
@@ -1007,7 +1044,7 @@
     const EXCHANGE_RATE = 565;
         
         const SERVICE_PRICING = {
-            monthly_fee: 10000,              // Redevance ALLO-BOT
+            monthly_fee: 15000,              // Redevance ALLO-BOT
             api_requests: 0.30 * EXCHANGE_RATE,    // FCFA/million au-delà de 10M
             r2_storage: 0.015 * EXCHANGE_RATE,     // FCFA/Go au-delà de 10 Go
             r2_class_a: 4.50 * EXCHANGE_RATE,      // FCFA/million (write, list)
@@ -1579,9 +1616,15 @@
             document.getElementById('costBreakdown').innerHTML = breakdownHTML;
 
             document.getElementById('totalCost').innerHTML = `
-                Coût Total Mensuel<br>
-                <span style="font-size: 0.6em; opacity: 0.9;">ALLO-BOT + ${ttsName} + ${sttName} + ${llmName}</span><br>
-                ${totalCost.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA
+                Coût Total Mensuel Estimé<br>
+                <span style="font-size: 0.5em; opacity: 0.9; line-height: 1.6;">
+                    (ALLO-BOT = ${costs.monthly_fee.toLocaleString('fr-FR')} FCFA) + 
+                    (${ttsName} = ${costs.tts.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA) + 
+                    (${sttName} = ${costs.stt.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA) + 
+                    (${llmName} = ${costs.llm.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA)
+                    ${costs.neurons > 0 ? ` + (Neurons = ${costs.neurons.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA)` : ''}
+                </span><br>
+                = ${totalCost.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA
             `;
 
             // Métriques clés
