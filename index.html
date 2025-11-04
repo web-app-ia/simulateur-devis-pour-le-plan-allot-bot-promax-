@@ -522,6 +522,31 @@
             transition: background 0.3s;
         }
 
+        .calc-method-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .calc-method-toggle label {
+            padding: 12px 25px;
+            border: 2px solid #c5cae9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+        .calc-method-toggle input[type="radio"] {
+            display: none;
+        }
+        .calc-method-toggle input[type="radio"]:checked + span {
+            color: #1a237e;
+            border: 3px solid #ffeb3b; /* Contour jaune vif */
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
         .preset-btn:hover {
             background: #3949ab;
         }
@@ -911,44 +936,70 @@
 
         <!-- Plage de temps (anciennement Configuration Générale) -->
         <div class="config-section">
-            <h2 class="section-title">⚙️ Plage de temps</h2>
-            
+            <h2 class="section-title">⚙️ Paramètres Généraux des Appels</h2>
+            <div class="info-box" style="font-size: 0.9em; padding: 10px; margin-top: -10px; margin-bottom: 25px; background: #e8eaf6; border-left-color: #3949ab;">
+                La <strong>durée moyenne</strong> est utilisée par les deux méthodes de calcul. Le <strong>temps de pause</strong> et les <strong>jours ouvrés</strong> ne s'appliquent qu'au mode "Planning Horaire".
+            </div>
+
             <div class="input-group">
                 <label>Durée moyenne d'un appel (minutes)</label>
                 <input type="number" id="callDuration" value="3" min="1" max="60" step="0.5">
             </div>
 
             <div class="input-group">
-                <label>Temps de pause par défaut (% de l'heure)</label>
+                <label>Temps de pause par défaut (% de l'heure) <span style="font-weight:normal; color:#666;">(Planning Horaire)</span></label>
                 <input type="number" id="defaultPauseTime" value="50" min="0" max="100" step="5" onchange="updateAllPauseTimes()">
             </div>
 
             <div class="input-group">
-                <label>Jours ouvrés par mois</label>
+                <label>Jours ouvrés par mois <span style="font-weight:normal; color:#666;">(Planning Horaire)</span></label>
                 <input type="number" id="workingDays" value="22" min="1" max="31">
             </div>
         </div>
 
 
 
-        
         <div class="config-section" id="planningSection">
-            <h2 class="section-title">📅 Planning des Utilisateurs Simultanés</h2>
-            
-            <div class="info-box">
-                <strong>💡 Astuce:</strong> Définissez le nombre moyen d'utilisateurs simultanés pour chaque heure de chaque jour.
+            <h2 class="section-title">📅 Méthode de Calcul du Volume d'Appels</h2>
+
+            <div class="calc-method-toggle">
+                <label>
+                    <input type="radio" name="calcMethod" value="hourly" checked onchange="toggleCalcMethod(this.value)" id="method-hourly">
+                    <span for="method-hourly">📅 Planning Horaire</span>
+                </label>
+                <label>
+                    <input type="radio" name="calcMethod" value="volume" onchange="toggleCalcMethod(this.value)" id="method-volume">
+                    <span for="method-volume">📊 Volume d'Appels</span>
+                </label>
             </div>
+
+            <p style="text-align: center; color: #dc2626; font-weight: 600; font-size: 0.9em; margin-top: -30px; margin-bottom: 25px;">
+                SÉLECTIONNEZ LA MÉTHODE DE CALCUL
+            </p>
 
             <div class="toggle-checkbox">
                 <input type="checkbox" id="enableWeeklyMode" onchange="toggleWeeklyMode()">
                 <label for="enableWeeklyMode">📆 Activer le mode 4 semaines (planning détaillé)</label>
             </div>
 
-            <div class="toggle-presets">
+            <div id="hourlyPlanningContainer" style="margin-top: 20px;">
+                <h3 style="color: #3949ab; margin-bottom: 15px;">Planning par Utilisateurs Simultanés</h3>
+                <div class="info-box">
+                    <strong>💡 Astuce:</strong> Définissez le nombre moyen d'utilisateurs simultanés pour chaque heure. Idéal pour une estimation basée sur l'activité en temps réel.
+                </div>
+            </div>
+
+            <div id="volumePlanningContainer" style="display: none; margin-top: 20px; ">
+                <h3 style="color: #3949ab; margin-bottom: 15px;">Planning par Volume d'Appels</h3>
+                <div class="info-box"><strong>💡 Astuce:</strong> Entrez directement le nombre d'appels et leur durée moyenne pour jusqu'à 5 campagnes ou types d'appels différents. Idéal pour une estimation rapide. La durée moyenne globale ne sera pas utilisée dans ce mode.</div>
+                <div id="volumeContainer" class="schedule-container" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="toggle-presets" id="presetsContainer">
                 <button class="preset-btn" data-preset="standard" onclick="applyPreset('standard')">📊 Standard</button>
                 <button class="preset-btn" data-preset="callcenter" onclick="applyPreset('callcenter')">📞 Call Center</button>
                 <button class="preset-btn" data-preset="support" onclick="applyPreset('support')">🔧 Support 24/7</button>
-                <button class="preset-btn" data-preset="commerce" onclick="applyPreset('commerce')">🛒 E-Commerce</button>
+                <button class="preset-btn" data-preset="ecommerce" onclick="applyPreset('ecommerce')">🛒 E-Commerce</button>
                 <button class="preset-btn" data-preset="zero" onclick="applyPresetToAllWeeks('zero')">🔄 Réinitialiser</button>
             </div>
 
@@ -975,7 +1026,7 @@
                 <div class="cost-breakdown" id="metricsBreakdown"></div>
             </div>
 
-            <div class="result-card">
+            <div class="result-card" id="hourlyDetailCard">
                 <h3 class="result-title">⏰ Détail par Tranche Horaire</h3>
                 <table class="hourly-table" id="hourlyTable"></table>
             </div>
@@ -1166,6 +1217,47 @@
             }
         }
 
+        function initializeVolumeSchedule() {
+            const volumeContainer = document.getElementById('volumeContainer');
+            volumeContainer.innerHTML = '';
+            const weeks = weeklyModeEnabled ? 4 : 1;
+
+            for (let week = 1; week <= weeks; week++) {
+                const weekContainer = document.createElement('div');
+                weekContainer.className = 'week-container';
+                
+                if (weeklyModeEnabled) {
+                    const weekTitle = document.createElement('div');
+                    weekTitle.className = 'week-title';
+                    weekTitle.textContent = `Volume d'appels - Semaine ${week}`;
+                    weekContainer.appendChild(weekTitle);
+                }
+
+                const table = document.createElement('table');
+                table.className = 'hourly-table'; // Réutilisation du style de tableau
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Type d'appel</th>
+                            <th>Nombre d'Appels</th>
+                            <th>Durée Moyenne (min)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    ${[...Array(5)].map((_, i) => `
+                        <tr>
+                            <td>Type d'appel ${i + 1}</td>
+                            <td><input type="number" class="hour-input" id="vol_w${week}_calls_${i}" placeholder="ex: 1000" min="0" onchange="calculateCosts()"></td>
+                            <td><input type="number" class="hour-input" id="vol_w${week}_duration_${i}" placeholder="ex: 5" min="0" onchange="calculateCosts()"></td>
+                        </tr>
+                    `).join('')}
+                    </tbody>
+                `;
+                weekContainer.appendChild(table);
+                volumeContainer.appendChild(weekContainer);
+            }
+        }
+
         function createDayCard(day, dayIndex, week) {
             const dayCard = document.createElement('div');
             dayCard.className = 'day-card';
@@ -1242,12 +1334,26 @@
 
         function toggleWeeklyMode() {
             weeklyModeEnabled = document.getElementById('enableWeeklyMode').checked;
+            // Réinitialiser les deux types de planning
             initializeSchedule();
+            initializeVolumeSchedule();
             if (weeklyModeEnabled) {
                 applyPresetToAllWeeks('standard');
             } else {
                 applyPreset('standard');
             }
+        }
+
+        function toggleCalcMethod(method) {
+            document.getElementById('hourlyPlanningContainer').style.display = (method === 'hourly') ? 'block' : 'none';
+            document.getElementById('volumePlanningContainer').style.display = (method === 'volume') ? 'block' : 'none';
+            document.getElementById('scheduleContainer').style.display = (method === 'hourly') ? 'block' : 'none';
+            
+            // Masquer les presets si on est en mode volume
+            document.getElementById('presetsContainer').style.display = (method === 'volume') ? 'none' : 'flex';
+
+            // Recalculer si les résultats sont déjà affichés
+            if (document.getElementById('results').classList.contains('show')) calculateCosts();
         }
 
         // Profils pré-configurés partagés
@@ -1391,6 +1497,8 @@
         function calculateCosts() {
             console.log('calculateCosts invoked');
             try {
+            const activeMethod = document.querySelector('input[name="calcMethod"]:checked').value;
+
             // Lire et valider les entrées (fallbacks sécurisés)
             let callDuration = parseFloat(document.getElementById('callDuration').value);
             if (!isFinite(callDuration) || callDuration <= 0) { console.warn('callDuration invalide, fallback à 3'); callDuration = 3; }
@@ -1419,23 +1527,46 @@
             const durableRequests = Number(parseFloat(document.getElementById('durableRequests').value) || 0);
 
             // Collecter les données horaires
-            let totalCalls = 0;
-            let hourlyData = [];
+            let monthlyCalls = 0;
+            let hourlyData = []; // Uniquement pour le mode horaire
 
-            if (weeklyModeEnabled) {
-                // Mode 4 semaines
-                for (let week = 1; week <= 4; week++) {
+            if (activeMethod === 'hourly') {
+                if (weeklyModeEnabled) {
+                    // Mode 4 semaines
+                    for (let week = 1; week <= 4; week++) {
+                        for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+                            for (let hour = 0; hour < 24; hour++) {
+                                const element = document.getElementById(`w${week}_day${dayIndex}_hour${hour}`);
+                                const pauseElement = document.getElementById(`pause_w${week}_day${dayIndex}_hour${hour}`);
+                                const users = element ? parseInt(element.value) || 0 : 0;
+                                const pausePercent = pauseElement ? parseInt(pauseElement.value) || defaultPauseTime : defaultPauseTime;
+                                const effectiveMinutes = 60 * (1 - (pausePercent / 100));
+                                const callsPerHour = users * (effectiveMinutes / callDuration);
+                                
+                                hourlyData.push({
+                                    week: week,
+                                    day: DAYS[dayIndex],
+                                    dayIndex: dayIndex,
+                                    hour: hour,
+                                    users: users,
+                                    callsPerHour: callsPerHour
+                                });
+                            }
+                        }
+                    }
+                } else {
+                    // Mode semaine unique
                     for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
                         for (let hour = 0; hour < 24; hour++) {
-                            const element = document.getElementById(`w${week}_day${dayIndex}_hour${hour}`);
-                            const pauseElement = document.getElementById(`pause_w${week}_day${dayIndex}_hour${hour}`);
+                            const element = document.getElementById(`day${dayIndex}_hour${hour}`);
+                            const pauseElement = document.getElementById(`pause_day${dayIndex}_hour${hour}`);
                             const users = element ? parseInt(element.value) || 0 : 0;
                             const pausePercent = pauseElement ? parseInt(pauseElement.value) || defaultPauseTime : defaultPauseTime;
                             const effectiveMinutes = 60 * (1 - (pausePercent / 100));
                             const callsPerHour = users * (effectiveMinutes / callDuration);
                             
                             hourlyData.push({
-                                week: week,
+                                week: 0,
                                 day: DAYS[dayIndex],
                                 dayIndex: dayIndex,
                                 hour: hour,
@@ -1445,44 +1576,43 @@
                         }
                     }
                 }
-            } else {
-                // Mode semaine unique
-                for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-                    for (let hour = 0; hour < 24; hour++) {
-                        const element = document.getElementById(`day${dayIndex}_hour${hour}`);
-                        const pauseElement = document.getElementById(`pause_day${dayIndex}_hour${hour}`);
-                        const users = element ? parseInt(element.value) || 0 : 0;
-                        const pausePercent = pauseElement ? parseInt(pauseElement.value) || defaultPauseTime : defaultPauseTime;
-                        const effectiveMinutes = 60 * (1 - (pausePercent / 100));
-                        const callsPerHour = users * (effectiveMinutes / callDuration);
-                        
-                        hourlyData.push({
-                            week: 0,
-                            day: DAYS[dayIndex],
-                            dayIndex: dayIndex,
-                            hour: hour,
-                            users: users,
-                            callsPerHour: callsPerHour
-                        });
+
+                // Calculer le nombre total d'appels par mois pour le mode horaire
+                if (weeklyModeEnabled) {
+                    // En mode 4 semaines, chaque semaine représente 1 semaine du mois
+                    hourlyData.forEach(slot => {
+                        monthlyCalls += slot.callsPerHour;
+                    });
+                } else {
+                    // En mode semaine unique, on multiplie par le nombre de semaines
+                    const weeksPerMonth = workingDays / 5;
+                    hourlyData.forEach(slot => {
+                        // Approximation simple pour jours non ouvrés
+                        const isWorkingDay = slot.dayIndex < 5;
+                        if (isWorkingDay) {
+                            monthlyCalls += slot.callsPerHour * weeksPerMonth;
+                        }
+                    });
+                }
+            } else { // activeMethod === 'volume'
+                let totalMinutesFromVolume = 0;
+                const weeksToProcess = weeklyModeEnabled ? 4 : 1;
+
+                for (let week = 1; week <= weeksToProcess; week++) {
+                    for (let i = 0; i < 5; i++) {
+                        const numCalls = parseInt(document.getElementById(`vol_w${week}_calls_${i}`).value) || 0;
+                        const duration = parseFloat(document.getElementById(`vol_w${week}_duration_${i}`).value) || 0;
+                        monthlyCalls += numCalls;
+                        totalMinutesFromVolume += numCalls * duration;
                     }
                 }
-            }
-
-            // Calculer le nombre total d'appels par mois
-            let monthlyCalls = 0;
-            
-            if (weeklyModeEnabled) {
-                // En mode 4 semaines, chaque semaine représente 1 semaine du mois
-                hourlyData.forEach(slot => {
-                    monthlyCalls += slot.callsPerHour;
-                });
-            } else {
-                // En mode semaine unique, on multiplie par le nombre de semaines
-                const weeksPerMonth = workingDays / 5;
-                hourlyData.forEach(slot => {
-                    const daysMultiplier = slot.dayIndex < 5 ? weeksPerMonth : (workingDays / 22) * 2;
-                    monthlyCalls += slot.callsPerHour * daysMultiplier;
-                });
+                
+                // Si le mode semaine unique est activé, on extrapole au mois (approx. 4.33 semaines)
+                if (!weeklyModeEnabled) {
+                    monthlyCalls *= 4.33;
+                    totalMinutesFromVolume *= 4.33;
+                }
+                callDuration = monthlyCalls > 0 ? totalMinutesFromVolume / monthlyCalls : 0; // Recalcule la durée moyenne pondérée
             }
 
             // Garantir nombre fini
@@ -1546,12 +1676,17 @@
             // Log détaillé pour vérification
             console.log('Sous-coûts:', JSON.parse(JSON.stringify(costs)));
 
-            const totalCost = Object.values(costs).reduce((a, b) => Number(a) + Number(b), 0);
-            const costPerCall = monthlyCalls ? totalCost / monthlyCalls : 0;
-            const costPerMinute = totalMinutes ? totalCost / totalMinutes : 0;
+            // Calculer le coût variable (sans la redevance) et le coût total
+            const variableCosts = { ...costs };
+            delete variableCosts.monthly_fee;
+            const totalVariableCost = Object.values(variableCosts).reduce((a, b) => Number(a) + Number(b), 0);
+            const totalCost = totalVariableCost + costs.monthly_fee;
+
+            const costPerCall = monthlyCalls ? totalVariableCost / monthlyCalls : 0;
+            const costPerMinute = totalMinutes ? totalVariableCost / totalMinutes : 0;
 
             // Afficher les résultats
-            displayResults(costs, totalCost, monthlyCalls, totalMinutes, costPerCall, costPerMinute, ttsProvider, sttProvider, llmModel, hourlyData, callDuration, workingDays);
+            displayResults(costs, totalCost, totalVariableCost, monthlyCalls, totalMinutes, costPerCall, costPerMinute, ttsProvider, sttProvider, llmModel, hourlyData, callDuration, workingDays);
             } catch (err) {
                 console.error('Erreur dans calculateCosts:', err);
                 // Afficher une alerte conviviale pour l'IDE si nécessaire
@@ -1560,8 +1695,12 @@
         }
 
         // Afficher les résultats
-        function displayResults(costs, totalCost, monthlyCalls, totalMinutes, costPerCall, costPerMinute, ttsProvider, sttProvider, llmModel, hourlyData, callDuration, workingDays) {
+        function displayResults(costs, totalCost, totalVariableCost, monthlyCalls, totalMinutes, costPerCall, costPerMinute, ttsProvider, sttProvider, llmModel, hourlyData, callDuration, workingDays) {
             document.getElementById('results').classList.add('show');
+            const activeMethod = document.querySelector('input[name="calcMethod"]:checked').value;
+
+            // Afficher ou masquer le détail horaire en fonction de la méthode de calcul
+            document.getElementById('hourlyDetailCard').style.display = (activeMethod === 'hourly') ? 'block' : 'none';
 
             // Déterminer les noms d'affichage
             const platformLlmModels = ['native', 'llama2', 'llama2-13b', 'mistral', 'mixtral', 'llama3-1b', 'cf-llama2-7b', 'cf-llama2-13b', 'cf-melotts'];
@@ -1617,12 +1756,8 @@
 
             document.getElementById('totalCost').innerHTML = `
                 Coût Total Mensuel Estimé<br>
-                <span style="font-size: 0.5em; opacity: 0.9; line-height: 1.6;">
-                    (ALLO-BOT = ${costs.monthly_fee.toLocaleString('fr-FR')} FCFA) + 
-                    (${ttsName} = ${costs.tts.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA) + 
-                    (${sttName} = ${costs.stt.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA) + 
-                    (${llmName} = ${costs.llm.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA)
-                    ${costs.neurons > 0 ? ` + (Neurons = ${costs.neurons.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA)` : ''}
+                <span style="font-size: 0.6em; opacity: 0.9; line-height: 1.6;">
+                    (Coûts Variables = ${totalVariableCost.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA) + (Redevance = ${costs.monthly_fee.toLocaleString('fr-FR')} FCFA)
                 </span><br>
                 = ${totalCost.toLocaleString('fr-FR', {maximumFractionDigits: 0})} FCFA
             `;
@@ -1639,11 +1774,13 @@
                 </div>
                 <div class="cost-item">
                     <div class="cost-label">💵 Coût / Appel</div>
-                    <div class="cost-value">${costPerCall.toLocaleString('fr-FR', {maximumFractionDigits: 2})} FCFA</div>
+                    <div class="cost-value">${costPerCall.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} FCFA</div>
+                    <div style="font-size: 0.75em; color: #666; margin-top: 5px;">(Hors redevance)</div>
                 </div>
                 <div class="cost-item">
                     <div class="cost-label">💸 Coût / Minute</div>
-                    <div class="cost-value">${costPerMinute.toLocaleString('fr-FR', {maximumFractionDigits: 2})} FCFA</div>
+                    <div class="cost-value">${costPerMinute.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} FCFA</div>
+                    <div style="font-size: 0.75em; color: #666; margin-top: 5px;">(Hors redevance)</div>
                 </div>
                 <div class="cost-item">
                     <div class="cost-label">📅 Jours Ouvrés</div>
@@ -1710,7 +1847,7 @@
 
         // Initialisation au chargement
         window.onload = function() {
-            initializeSchedule();
+            toggleWeeklyMode(); // Appelle initializeSchedule et initializeVolumeSchedule
             applyPreset('standard');
             // Attacher un listener au bouton de calcul au cas où l'attribut onclick ne serait pas pris en charge par l'aperçu IDE
             try {
